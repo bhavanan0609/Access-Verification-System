@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Intelligent Access Verification System</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+:root{--bg:#eaf0ee;--card:#fff;--ink:#14282c;--mute:#5a6e72;--line:#cfdad7;--teal:#0e6b6b;--ok:#1b7a4a;--bad:#b3261e;--warn:#9a6200;--okbg:#e0f2e8;--badbg:#fbe6e4;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1a1c;--card:#172427;--ink:#e3eeec;--mute:#93a9ac;--line:#2a3d41;--teal:#4fc3bd;--ok:#5fd394;--bad:#ff8a80;--warn:#f0b34a;--okbg:#14352a;--badbg:#3a1a18}}
+:root[data-theme="dark"]{--bg:#0f1a1c;--card:#172427;--ink:#e3eeec;--mute:#93a9ac;--line:#2a3d41;--teal:#4fc3bd;--ok:#5fd394;--bad:#ff8a80;--warn:#f0b34a;--okbg:#14352a;--badbg:#3a1a18}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 "IBM Plex Sans",system-ui,sans-serif}
+header{padding:22px 20px 0;max-width:1080px;margin:auto}
+h1{font-size:26px;margin:0;font-weight:600;letter-spacing:-.01em}
+.sub{color:var(--mute);margin:2px 0 14px}
+.online{float:right;font:500 12px "IBM Plex Mono",monospace;color:var(--ok)}
+.online:before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-right:6px}
+.online.lock{color:var(--bad)}.online.lock:before{background:var(--bad)}
+nav{display:flex;gap:6px;border-bottom:1px solid var(--line)}
+nav button{background:none;border:0;border-bottom:3px solid transparent;padding:10px 14px;font:inherit;font-weight:500;color:var(--mute);cursor:pointer}
+nav button.on{color:var(--teal);border-color:var(--teal)}
+main{max-width:1080px;margin:auto;padding:18px 20px 40px}
+section{display:none}section.on{display:block}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:16px;margin-bottom:16px;max-width:100%}
+.card h3{margin:0 0 10px;font-size:16px}
+label{display:block;font-size:13px;color:var(--mute);margin:8px 0 3px}
+input,select{width:100%;padding:9px;border:1px solid var(--line);border-radius:4px;font:inherit;background:var(--bg);color:var(--ink)}
+button.act{background:var(--teal);color:var(--bg);border:0;border-radius:4px;padding:9px 14px;font:inherit;font-weight:600;cursor:pointer;margin:10px 8px 0 0}
+button.act.sec{background:none;color:var(--teal);border:1px solid var(--teal)}
+button.act.red{background:var(--bad);color:#fff}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.kv{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)}
+.kv:last-child{border:0}.kv b{font-weight:500}
+.ok{color:var(--ok)}.fail{color:var(--bad)}.skip,.wait{color:var(--mute)}
+.decision{padding:14px;border-radius:4px;background:var(--bg);font-weight:600}
+.decision.ok{background:var(--okbg)}.decision.fail{background:var(--badbg)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--mute);font-weight:500;font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:16px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:12px}
+.stat b{display:block;font-size:26px;font-weight:600}
+.queue{display:flex;align-items:center;flex-wrap:wrap;gap:4px;min-height:44px;font:500 13px "IBM Plex Mono",monospace}
+.qn{border:1.5px solid var(--teal);border-radius:4px;padding:6px 9px;background:var(--bg)}
+.arrow{color:var(--mute)}
+.tag{font:500 11px "IBM Plex Mono",monospace;color:var(--mute);margin-right:4px}
+.note{color:var(--mute);font-size:13px}
+.banner{background:var(--badbg);color:var(--bad);padding:10px 14px;border-radius:4px;margin-bottom:12px;font-weight:600;display:none}
+.banner.on{display:block}
+.dsa p{margin:6px 0}
+</style>
+</head>
+<body>
+<header>
+<span class="online" id="sys">SYSTEM ONLINE</span>
+<h1>Intelligent Access Verification System</h1>
+<p class="sub">High-security biomedical research laboratory</p>
+<nav>
+<button class="on" id="t1" onclick="show(1)">Researcher portal</button>
+<button id="t2" onclick="show(2)">Security officer dashboard</button>
+<button id="t3" onclick="show(3)">How it works</button>
+</nav>
+</header>
+<main>
+<div class="banner" id="ban">Emergency lockdown is active. All access requests will be denied.</div>
+
+<section id="s1" class="on">
+<div class="grid">
+<div>
+<div class="card">
+<h3>Request laboratory access</h3>
+<label for="rid">Researcher ID</label>
+<input id="rid" placeholder="e.g. R101" autocomplete="off">
+<label for="rlab">Requested laboratory</label>
+<select id="rlab"><option value="LAB1">LAB1 – Biomedical Research</option><option value="LAB2">LAB2 – Chemical Analysis</option><option value="LAB3">LAB3 – Storage</option></select>
+<button class="act" onclick="request()">Send request</button>
+<button class="act sec" onclick="processNext()">Process next request</button>
+<button class="act sec" onclick="processAll()">Process all</button>
+</div>
+<div class="card">
+<h3>Pending request queue (first in, first out)</h3>
+<div class="queue" id="qview"></div>
+<p class="note" id="qnote"></p>
+</div>
+</div>
+<div>
+<div class="card">
+<h3>Researcher information</h3>
+<div id="info"></div>
+</div>
+<div class="card">
+<h3>Security verification</h3>
+<div class="kv"><span>Authentication</span><b id="c1" class="wait">Waiting</b></div>
+<div class="kv"><span>Authorization</span><b id="c2" class="wait">Waiting</b></div>
+<div class="kv"><span>Permission</span><b id="c3" class="wait">Waiting</b></div>
+<div class="kv"><span>Revocation</span><b id="c4" class="wait">Waiting</b></div>
+<div class="kv"><span>Emergency lockdown</span><b id="c5" class="wait">Waiting</b></div>
+</div>
+<div class="card"><h3>Access decision</h3><div class="decision" id="dec">Send a request, then process it from the queue.</div></div>
+</div>
+</div>
+<div class="card"><h3>Recent access history</h3><div class="scroll"><table><thead><tr><th>ID</th><th>Name</th><th>Zone</th><th>Decision</th><th>Time</th></tr></thead><tbody id="hist"></tbody></table></div></div>
+</section>
+
+<section id="s2">
+<div class="stats">
+<div class="stat"><b id="n1">0</b>Researchers</div><div class="stat"><b id="n2">0</b>Total requests</div>
+<div class="stat"><b id="n3" class="ok">0</b>Granted</div><div class="stat"><b id="n4" class="fail">0</b>Denied</div>
+<div class="stat"><b id="n5">0</b>Waiting in queue</div>
+</div>
+<div class="card">
+<h3>Emergency security control</h3>
+<p class="note" id="lknote">Emergency lockdown is currently disabled.</p>
+<button class="act" id="lkbtn" onclick="toggleLock()">Enable lockdown</button>
+</div>
+<div class="card">
+<h3>Add researcher</h3>
+<div class="grid">
+<div><label for="aid">Researcher ID</label><input id="aid" placeholder="R105"></div>
+<div><label for="anm">Name</label><input id="anm" placeholder="Full name"></div>
+<div><label for="azn">Authorized zone</label><select id="azn"><option>LAB1</option><option>LAB2</option><option>LAB3</option></select></div>
+</div>
+<button class="act" onclick="addR()">Add researcher</button>
+<span class="note" id="amsg"></span>
+</div>
+<div class="card"><h3>Registered researchers</h3><div class="scroll"><table><thead><tr><th>ID</th><th>Name</th><th>Authorized zone</th><th>Permission</th><th>Revoked</th><th>Actions</th></tr></thead><tbody id="rtab"></tbody></table></div></div>
+<div class="card"><h3>Security activity</h3><div class="scroll"><table><thead><tr><th>ID</th><th>Name</th><th>Zone</th><th>Decision</th><th>Reason</th><th>Time</th></tr></thead><tbody id="atab"></tbody></table></div></div>
+</section>
+
+<section id="s3">
+<div class="card dsa">
+<h3>Data structures used</h3>
+<p>This site uses only two structures, both built from scratch with linked nodes. It does not use arrays, stacks, sorting or hashing for its data.</p>
+<p><b>Singly linked list: researcher records.</b> Researchers can be added, revoked, restored and removed at any time, so a linked list grows and shrinks without shifting elements. Looking up an ID walks the list node by node, which takes O(n).</p>
+<p><b>Singly linked list: access history and security activity.</b> Each new decision is inserted at the head in O(1), so the newest entry is always listed first.</p>
+<p><b>Linked queue: pending access requests.</b> Requests are added at the rear (enqueue) and served from the front (dequeue), both in O(1). Requests are handled in the order they arrive.</p>
+<h3 style="margin-top:16px">Verification order</h3>
+<p>Dequeue request, search researcher list, then check in turn: authentication (ID exists), authorization (zone matches), permission (active), revocation (not revoked) and lockdown (off). Access is denied at the first failed check and granted only if all pass. The decision is stored in the history and activity lists.</p>
+</div>
+</section>
+</main>
+<script>
+// ---- Data structures: singly linked list and linked queue ----
+class Node{constructor(d){this.data=d;this.next=null}}
+class LinkedList{
+ constructor(){this.head=null;this.tail=null;this.size=0}
+ append(d){const n=new Node(d);if(!this.head){this.head=this.tail=n}else{this.tail.next=n;this.tail=n}this.size++}
+ prepend(d){const n=new Node(d);n.next=this.head;this.head=n;if(!this.tail)this.tail=n;this.size++}
+ find(fn){let c=this.head;while(c){if(fn(c.data))return c.data;c=c.next}return null}
+ remove(fn){let p=null,c=this.head;while(c){if(fn(c.data)){if(p)p.next=c.next;else this.head=c.next;if(c===this.tail)this.tail=p;this.size--;return true}p=c;c=c.next}return false}
+ each(cb){let c=this.head,i=0;while(c){cb(c.data,i++);c=c.next}}
+}
+class LinkedQueue{
+ constructor(){this.front=null;this.rear=null;this.size=0}
+ enqueue(d){const n=new Node(d);if(this.rear)this.rear.next=n;else this.front=n;this.rear=n;this.size++}
+ dequeue(){if(!this.front)return null;const n=this.front;this.front=n.next;if(!this.front)this.rear=null;this.size--;return n.data}
+ each(cb){let c=this.front,i=0;while(c){cb(c.data,i++);c=c.next}}
+}
+
+// ---- State ----
+const researchers=new LinkedList(), requests=new LinkedQueue(), history=new LinkedList(), activity=new LinkedList();
+let lockdown=false,total=0,granted=0,denied=0;
+[["R101","Dr. Anika Rao","LAB1"],["R102","Meera Nair","LAB2"],["R103","Arjun Das","LAB3"],["R104","Kiran Shah","LAB1"]].forEach(function(r){researchers.append({id:r[0],name:r[1],zone:r[2],active:true,revoked:false})});
+researchers.find(function(r){return r.id==="R104"}).revoked=true;
+
+const $=function(i){return document.getElementById(i)};
+const esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})};
+function show(n){for(let i=1;i<=3;i++){$("s"+i).classList.toggle("on",i===n);$("t"+i).classList.toggle("on",i===n)}render()}
+
+function request(){
+ const id=$("rid").value.trim().toUpperCase(), zone=$("rlab").value;
+ if(!id){$("dec").className="decision";$("dec").textContent="Enter a researcher ID first.";return}
+ requests.enqueue({id:id,zone:zone});
+ const r=researchers.find(function(x){return x.id===id});
+ $("info").innerHTML=r?row("Name",r.name)+row("Authorized zone",r.zone)+row("Permission",r.active?"Active":"Inactive")+row("Access status",r.revoked?"Revoked":"Not revoked"):row("Name","Not found");
+ $("rid").value="";
+ render();
+}
+function row(k,v){return '<div class="kv"><span>'+k+'</span><b>'+esc(v)+'</b></div>'}
+function chk(id,state,text){const e=$(id);e.className=state;e.textContent=text}
+function resetChecks(){for(let i=1;i<=5;i++)chk("c"+i,"wait","Waiting")}
+
+function processNext(){
+ const req=requests.dequeue();
+ if(!req){$("dec").className="decision";$("dec").textContent="The queue is empty. Send a request first.";return}
+ const r=researchers.find(function(x){return x.id===req.id});
+ let reason=null;
+ resetChecks();
+ if(!r)reason="Unknown researcher ID";
+ chk("c1",reason?"fail":"ok",reason?"Failed":"Passed");
+ if(!reason&&r.zone!==req.zone)reason="Zone not authorized";
+ chk("c2",reason?(r?"fail":"skip"):"ok",!r?"Skipped":reason?"Failed":"Passed");
+ if(!reason&&!r.active)reason="Permission inactive";
+ chk("c3",reason?(reason==="Permission inactive"?"fail":"skip"):"ok",reason?(reason==="Permission inactive"?"Failed":"Skipped"):"Passed");
+ if(!reason&&r.revoked)reason="Access revoked";
+ chk("c4",reason?(reason==="Access revoked"?"fail":"skip"):"ok",reason?(reason==="Access revoked"?"Failed":"Skipped"):"Passed");
+ if(!reason&&lockdown)reason="Emergency lockdown";
+ chk("c5",reason?(reason==="Emergency lockdown"?"fail":"skip"):"ok",reason?(reason==="Emergency lockdown"?"Failed":"Skipped"):"Passed");
+ const ok=!reason, name=r?r.name:"Unknown";
+ total++;if(ok)granted++;else denied++;
+ const time=new Date().toLocaleTimeString();
+ history.prepend({id:req.id,name:name,zone:req.zone,ok:ok,time:time});
+ activity.prepend({id:req.id,name:name,zone:req.zone,ok:ok,reason:ok?"All checks passed":reason,time:time});
+ $("info").innerHTML=r?row("Name",r.name)+row("Authorized zone",r.zone)+row("Permission",r.active?"Active":"Inactive")+row("Access status",r.revoked?"Revoked":"Not revoked"):row("Name","Not found");
+ $("dec").className="decision "+(ok?"ok":"fail");
+ $("dec").textContent=ok?"Access granted to "+req.zone+" for "+name+".":"Access denied: "+reason+".";
+ render();
+}
+function processAll(){while(requests.size>0)processNext()}
+
+function toggleLock(){lockdown=!lockdown;render()}
+function addR(){
+ const id=$("aid").value.trim().toUpperCase(),nm=$("anm").value.trim();
+ if(!id||!nm){$("amsg").textContent="Enter both an ID and a name.";return}
+ if(researchers.find(function(x){return x.id===id})){$("amsg").textContent="That ID already exists.";return}
+ researchers.append({id:id,name:nm,zone:$("azn").value,active:true,revoked:false});
+ $("aid").value="";$("anm").value="";$("amsg").textContent="Researcher added.";render();
+}
+function revoke(id){const r=researchers.find(function(x){return x.id===id});if(r)r.revoked=!r.revoked;render()}
+function perm(id){const r=researchers.find(function(x){return x.id===id});if(r)r.active=!r.active;render()}
+function del(id){researchers.remove(function(x){return x.id===id});render()}
+
+function render(){
+ let h="";
+ requests.each(function(q,i){h+=(i?'<span class="arrow">→</span>':'')+'<span class="qn">'+esc(q.id)+' · '+q.zone+'</span>'});
+ $("qview").innerHTML=h||'<span class="note">No pending requests.</span>';
+ $("qnote").textContent=requests.size?"Front is served first. "+requests.size+" waiting.":"";
+ h="";
+ history.each(function(e,i){if(i<8)h+='<tr><td>'+esc(e.id)+'</td><td>'+esc(e.name)+'</td><td>'+e.zone+'</td><td class="'+(e.ok?"ok":"fail")+'">'+(e.ok?"Granted":"Denied")+'</td><td>'+e.time+'</td></tr>'});
+ $("hist").innerHTML=h||'<tr><td colspan="5" class="note">No decisions yet.</td></tr>';
+ h="";
+ researchers.each(function(r){h+='<tr><td>'+esc(r.id)+'</td><td>'+esc(r.name)+'</td><td>'+r.zone+'</td><td class="'+(r.active?"ok":"fail")+'">'+(r.active?"Active":"Inactive")+'</td><td>'+(r.revoked?"Yes":"No")+'</td><td><button class="act sec" onclick="revoke(\''+r.id+'\')">'+(r.revoked?"Restore":"Revoke")+'</button><button class="act sec" onclick="perm(\''+r.id+'\')">'+(r.active?"Deactivate":"Activate")+'</button><button class="act sec" onclick="del(\''+r.id+'\')">Remove</button></td></tr>'});
+ $("rtab").innerHTML=h||'<tr><td colspan="6" class="note">No researchers registered. Add one above.</td></tr>';
+ h="";
+ activity.each(function(e,i){if(i<15)h+='<tr><td>'+esc(e.id)+'</td><td>'+esc(e.name)+'</td><td>'+e.zone+'</td><td class="'+(e.ok?"ok":"fail")+'">'+(e.ok?"Granted":"Denied")+'</td><td>'+esc(e.reason)+'</td><td>'+e.time+'</td></tr>'});
+ $("atab").innerHTML=h||'<tr><td colspan="6" class="note">No activity yet.</td></tr>';
+ $("n1").textContent=researchers.size;$("n2").textContent=total;$("n3").textContent=granted;$("n4").textContent=denied;$("n5").textContent=requests.size;
+ $("ban").classList.toggle("on",lockdown);
+ $("sys").textContent=lockdown?"LOCKDOWN ACTIVE":"SYSTEM ONLINE";$("sys").classList.toggle("lock",lockdown);
+ $("lknote").textContent=lockdown?"Emergency lockdown is active. Every request is denied.":"Emergency lockdown is currently disabled.";
+ $("lkbtn").textContent=lockdown?"Disable lockdown":"Enable lockdown";
+ $("lkbtn").className="act"+(lockdown?"":" red");
+}
+render();
+</script>
+</body>
+</html>
